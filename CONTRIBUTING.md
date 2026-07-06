@@ -168,6 +168,10 @@ npm run sync-drive -- --force   # full re-process (ignores .drive-sync-state.jso
 **Service account:**  `matt-beard-ai@vertexai-404717.iam.gserviceaccount.com`
 Both Drive folders must be shared with this email (Viewer access).
 
+**Note:** govspend.com Workspace blocks external service accounts from accessing Drive.
+The initial KB import was done via Claude.ai's Google Drive MCP (authenticated as mbeard@govspend.com)
+using `scripts/mcp-import.ts`. See Workflow 8 below for re-importing via MCP.
+
 **If a spreadsheet's Q&A columns aren't detected correctly:**
 Re-run with `--force` after fixing the column headers — the column detector uses Haiku to
 guess "Question" and "Answer" columns from the first few rows. Standard header names (`Question`,
@@ -181,6 +185,42 @@ DELETE FROM public.kb_entries WHERE internal_notes LIKE '%"drive_id":"FILE_ID"%'
 -- Remove evidence_docs from a specific Drive file
 DELETE FROM public.evidence_docs WHERE source_url LIKE 'https://drive.google.com/file/d/FILE_ID%';
 ```
+
+---
+
+## Workflow 8 — Re-import KB from Google Drive via MCP (no service account)
+
+Because govspend.com Workspace blocks the service account, the primary import path is via
+Claude.ai's Google Drive MCP (authenticated as mbeard@govspend.com inside a Claude Code session).
+
+**Initial import was run on 2026-07-06.** Current state: 489 kb_entries + 294 evidence_docs.
+
+To re-import or add new files:
+
+1. **In Claude Code**, run the `drive-kb-import` Workflow (defined in the session scripts). It reads
+   files from both Drive folders in parallel using the MCP tools and writes a staging JSON:
+   ```
+   /scratchpad/drive-staging.json
+   ```
+   If the workflow's write-staging step truncates the file, run:
+   ```bash
+   node scratchpad/rebuild-staging.mjs
+   ```
+
+2. **Process the staging file into Supabase:**
+   ```bash
+   npm run mcp-import                          # uses default staging path
+   npm run mcp-import path/to/staging.json     # or specify path
+   ```
+   The script:
+   - Spreadsheets → Haiku extracts Q&A pairs → `kb_entries` (falls back to evidence_docs if no pairs)
+   - Documents → chunks ~3000 chars → `evidence_docs`
+   - Voyage AI free tier: auto-throttles to 3 RPM with 21-second gaps between embed calls (~40 min for 115 files)
+
+3. **Apply any new SQL migrations** (e.g. after adding a new RPC function):
+   ```bash
+   SUPABASE_DB_PASSWORD='<password>' npm run apply-migrations
+   ```
 
 ---
 
