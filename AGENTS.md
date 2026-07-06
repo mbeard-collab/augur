@@ -57,6 +57,7 @@ app/
     new/page.tsx                         Upload / paste form
     questionnaires/[id]/page.tsx         Workspace server shell → WorkspaceShell
     review/page.tsx                      DevSecOps review queue (admin only)
+    kb/page.tsx                          Admin Knowledge Base viewer (search + filter)
 components/workspace/
   WorkspaceShell.tsx                     Client: selection state, 3 s polling while processing
   QuestionList.tsx                       Left panel: question list with j/k keyboard nav
@@ -81,6 +82,7 @@ lib/
 proxy.ts                                 Auth guard + @govspend.com domain enforcement
 scripts/import-kb.ts                     One-shot KB seeder from Excel
 scripts/sync-drive.ts                    Google Drive KB sync (spreadsheets → kb_entries, docs → evidence_docs)
+scripts/mcp-import.ts                    Process MCP-staged Drive content (drive-staging.json) → Supabase KB
 config/google-service-account.json      Service account key (gitignored — never commit)
 .drive-sync-state.json                  Incremental sync cache (gitignored — maps fileId → modifiedTime)
 supabase/migrations/                     0001 tables, 0002 RLS, 0003 functions, 0004 progress RPC
@@ -118,12 +120,12 @@ supabase/migrations/                     0001 tables, 0002 RLS, 0003 functions, 
 8. **No test suite — `npm run type-check` is the main automated guard.**
    Run it before committing.
 
-## Known Bugs (fix before shipping features that depend on these)
+## Known Bugs
 
-- **`AnswerPanel.tsx:39`** — API URL uses `answer.question_id.split('-')[0]` as the questionnaire ID.
-  Wrong: use `question.questionnaire_id`. All answer actions (Approve/Edit/Route/Reject) are broken.
-- **`/dashboard/kb`** — Sidebar nav links to this route (admin only) but no page exists. Will 404.
-- **`'portal'` source_format** — In enum and DB but unhandled in `process-questionnaire.ts`. Will throw.
+All three original known bugs are **fixed** (commit f78eaa1):
+- `AnswerPanel.tsx` — answer actions now use `question.questionnaire_id` ✓
+- `/dashboard/kb` — KB admin page created ✓
+- `'portal'` source_format — treated as `paste` (questions pre-inserted) ✓
 
 ## Reference Docs
 
