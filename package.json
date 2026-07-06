@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "import-kb": "tsx scripts/import-kb.ts",
+    "sync-drive": "tsx scripts/sync-drive.ts",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -20,6 +21,7 @@
     "dotenv": "^17.4.2",
     "exceljs": "^4.4.0",
     "framer-motion": "^12.42.0",
+    "googleapis": "^173.0.0",
     "inngest": "^4.11.0",
     "lucide-react": "^1.22.0",
     "mammoth": "^1.12.0",

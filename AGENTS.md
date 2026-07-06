@@ -34,6 +34,8 @@ npm run build         # production build
 npm run type-check    # tsc --noEmit  ← run before every commit; no test suite exists
 npm run lint          # eslint
 npm run import-kb     # seed KB: SEED_USER_ID=<uuid> npm run import-kb path/to/AnswerBank.xlsx
+npm run sync-drive    # sync KB from Google Drive (see CONTRIBUTING.md Workflow 7)
+npm run sync-drive -- --force   # force re-process all files, ignore incremental cache
 
 npx inngest-cli@latest dev   # local Inngest dev server on :8288 (run alongside next dev)
 ```
@@ -78,6 +80,9 @@ lib/
   utils.ts                               formatDistanceToNow, cn()
 proxy.ts                                 Auth guard + @govspend.com domain enforcement
 scripts/import-kb.ts                     One-shot KB seeder from Excel
+scripts/sync-drive.ts                    Google Drive KB sync (spreadsheets → kb_entries, docs → evidence_docs)
+config/google-service-account.json      Service account key (gitignored — never commit)
+.drive-sync-state.json                  Incremental sync cache (gitignored — maps fileId → modifiedTime)
 supabase/migrations/                     0001 tables, 0002 RLS, 0003 functions, 0004 progress RPC
 ```
 

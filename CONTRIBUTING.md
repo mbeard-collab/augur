@@ -144,6 +144,46 @@ Example: a nightly KB staleness check.
 
 ---
 
+## Workflow 7 — Sync the knowledge base from Google Drive
+
+Two Drive folders are configured: one for policy documents, one for vendor survey Q&A.
+
+```bash
+npm run sync-drive          # incremental — skips files unchanged since last run
+npm run sync-drive -- --force   # full re-process (ignores .drive-sync-state.json cache)
+```
+
+**What it does:**
+- Lists all files in the two folders in `.env.local → GOOGLE_DRIVE_FOLDER_IDS` recursively
+- Spreadsheets (Google Sheets, Excel, CSV) → detects Q&A columns via Claude Haiku → `kb_entries`
+- Documents (Google Docs, Word, PDF, plain text) → extracts text → chunks ~3000 chars → `evidence_docs`
+- Embeds all content via Voyage AI `voyage-3-large`
+- Dedup on rerun: deletes existing rows by Drive file ID before reinserting changed files
+
+**Env vars required** (all in `.env.local`):
+- `GOOGLE_SERVICE_ACCOUNT_JSON` — path to `config/google-service-account.json`
+- `GOOGLE_DRIVE_FOLDER_IDS` — comma-separated folder IDs (Policies, Vendor Surveys)
+- `SEED_USER_ID` — admin UUID used for `approved_by` on kb_entries
+
+**Service account:**  `matt-beard-ai@vertexai-404717.iam.gserviceaccount.com`
+Both Drive folders must be shared with this email (Viewer access).
+
+**If a spreadsheet's Q&A columns aren't detected correctly:**
+Re-run with `--force` after fixing the column headers — the column detector uses Haiku to
+guess "Question" and "Answer" columns from the first few rows. Standard header names (`Question`,
+`Answer`, `Response`, `Description`) work reliably; unusual names may need renaming.
+
+**Cleanup if you need to wipe a source and re-import:**
+```sql
+-- Remove kb_entries from a specific Drive file
+DELETE FROM public.kb_entries WHERE internal_notes LIKE '%"drive_id":"FILE_ID"%';
+
+-- Remove evidence_docs from a specific Drive file
+DELETE FROM public.evidence_docs WHERE source_url LIKE 'https://drive.google.com/file/d/FILE_ID%';
+```
+
+---
+
 ## Workflow 6 — Re-seed or update the knowledge base
 
 ```bash
