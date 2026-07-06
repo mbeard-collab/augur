@@ -102,14 +102,22 @@ export async function generateGroundedAnswer(
 // ─────────────────────────────────────────────
 function buildContextBlock(candidates: SearchResult[]): string {
   if (candidates.length === 0) return '(No approved KB entries matched this question.)'
-  return candidates.map((c, i) => `\
+  return candidates.map((c, i) => {
+    if (c.result_type === 'evidence_doc') {
+      return `\
+[POLICY DOC ${i + 1}]
+ID: ${c.id}
+Title: ${c.title}${c.section ? `\nSection: ${c.section}` : ''}
+Content: ${c.content}`
+    }
+    return `\
 [ENTRY ${i + 1}]
 ID: ${c.id}
 Domain: ${c.domain}
 Tier: ${c.tier}
 Question: ${c.question}
-Answer: ${c.answer}
-`).join('\n---\n')
+Answer: ${c.answer}`
+  }).join('\n---\n')
 }
 
 function resolveDisplayText(

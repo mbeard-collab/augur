@@ -269,6 +269,21 @@ export interface Database {
         Args: Record<string, never>
         Returns: string
       }
+      search_evidence_docs: {
+        Args: {
+          query_embedding: string
+          match_count?:    number
+        }
+        Returns: Array<{
+          id:         string
+          title:      string
+          section:    string | null
+          content:    string
+          source_url: string | null
+          nda_gated:  boolean
+          similarity: number
+        }>
+      }
     }
     Enums:          { [_ in never]: never }
     CompositeTypes: { [_ in never]: never }
