@@ -32,7 +32,7 @@ export const processQuestionnaire = inngest.createFunction(
     })
 
     const questions = await step.run('extract-questions', async () => {
-      if (questionnaire.source_format === 'paste') {
+      if (questionnaire.source_format === 'paste' || questionnaire.source_format === 'portal') {
         const { data } = await supabase
           .from('questions')
           .select('id, raw_text')

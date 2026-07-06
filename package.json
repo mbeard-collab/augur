@@ -9,6 +9,7 @@
     "lint": "eslint",
     "import-kb": "tsx scripts/import-kb.ts",
     "sync-drive": "tsx scripts/sync-drive.ts",
+    "mcp-import": "tsx scripts/mcp-import.ts",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

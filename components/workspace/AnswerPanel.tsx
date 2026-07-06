@@ -36,7 +36,7 @@ export function AnswerPanel({ question, userRole, onUpdate }: Props) {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/questionnaires/${answer!.question_id.split('-')[0]}/answers`, {
+      const res = await fetch(`/api/questionnaires/${question.questionnaire_id}/answers`, {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ answer_id: answer!.id, action, ...extraBody }),
