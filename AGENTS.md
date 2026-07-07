@@ -38,6 +38,9 @@ npm run sync-drive    # sync KB from Google Drive (see CONTRIBUTING.md Workflow 
 npm run sync-drive -- --force   # force re-process all files, ignore incremental cache
 
 npx inngest-cli@latest dev   # local Inngest dev server on :8288 (run alongside next dev)
+
+# Deploy to production (auto-deploy from git push is disabled — run this after every push)
+npx vercel --prod --yes
 ```
 
 ## Directory Map
@@ -126,6 +129,13 @@ All three original known bugs are **fixed** (commit f78eaa1):
 - `AnswerPanel.tsx` — answer actions now use `question.questionnaire_id` ✓
 - `/dashboard/kb` — KB admin page created ✓
 - `'portal'` source_format — treated as `paste` (questions pre-inserted) ✓
+
+**Additional fixes (commit 70127b6):**
+- Paste questionnaire: `paste_text` lines were never parsed into `questions` rows before Inngest fired — now inserted in the POST route before the event is sent ✓
+
+## Known Limitations
+
+- **Workspace polling**: if the page was loaded while a questionnaire was still processing and all answers complete before the next 3-second poll, the UI may stay on the spinner. Hard-refresh (Cmd+Shift+R) loads the final state from the server.
 
 ## Reference Docs
 
