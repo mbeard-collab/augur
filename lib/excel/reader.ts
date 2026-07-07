@@ -13,6 +13,8 @@ function cellToString(value: ExcelJS.CellValue): string {
   if (typeof value === 'number')  return String(value)
   if (typeof value === 'boolean') return String(value)
   if (value instanceof Date)      return value.toISOString()
+  if (typeof value === 'object' && 'richText' in value)
+    return (value as { richText: Array<{ text?: string }> }).richText.map(r => r.text ?? '').join('').trim()
   if (typeof value === 'object' && 'text' in value) return String((value as { text: unknown }).text ?? '')
   if (typeof value === 'object' && 'result' in value) return String((value as { result: unknown }).result ?? '')
   return String(value)
