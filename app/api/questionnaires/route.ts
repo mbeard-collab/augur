@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
   const name      = formData.get('name') as string
   const customer  = formData.get('customer') as string
   const format    = formData.get('format') as string
+  const pasteText = formData.get('paste_text') as string | null
 
   let filePath: string | null = null
 
@@ -62,6 +63,28 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // For paste format, parse lines into questions now so Inngest can find them
+  if (format === 'paste' && pasteText?.trim()) {
+    const lines = pasteText
+      .split('\n')
+      .map(l => l.trim())
+      .filter(l => l.length > 0)
+      // Strip leading numbering like "1." "1)" "Q1."
+      .map(l => l.replace(/^\s*(?:\d+[\.\)]\s*|[Qq]\d+[\.\):\s]+)/, '').trim())
+      .filter(l => l.length > 0)
+
+    if (lines.length > 0) {
+      const { error: qError } = await supabase.from('questions').insert(
+        lines.map((raw_text, i) => ({
+          questionnaire_id: questionnaire.id,
+          raw_text,
+          sequence_index: i,
+        }))
+      )
+      if (qError) return NextResponse.json({ error: qError.message }, { status: 500 })
+    }
+  }
 
   // Trigger Inngest processing
   const { ids } = await inngest.send({
