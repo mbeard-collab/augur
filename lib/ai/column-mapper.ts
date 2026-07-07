@@ -15,6 +15,7 @@ export type ColumnMap = {
   question_column:    string
   answer_column:      string | null
   additional_columns: string[]
+  confidence:         'high' | 'medium' | 'low'
 }
 
 export async function detectColumns(
@@ -38,5 +39,6 @@ export async function detectColumns(
     question_column:    object.question_column,
     answer_column:      object.answer_column,
     additional_columns: object.additional_columns,
+    confidence:         object.confidence,
   }
 }
