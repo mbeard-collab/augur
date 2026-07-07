@@ -37,7 +37,7 @@ async function extractFromSheet(
   if (columnMap.confidence === 'low') return []
 
   let qColIndex = headers.findIndex(
-    (h) => h.toLowerCase() === columnMap.question_column.toLowerCase(),
+    (h) => h?.toLowerCase() === columnMap.question_column.toLowerCase(),
   )
   if (qColIndex === -1) {
     const letter      = columnMap.question_column.toUpperCase()
