@@ -34,7 +34,6 @@ async function extractFromSheet(
   const sampleRows = rows.slice(1, 5)
 
   const columnMap = await detectColumns(headers, sampleRows)
-  if (columnMap.confidence === 'low') return []
 
   let qColIndex = headers.findIndex(
     (h) => h?.toLowerCase() === columnMap.question_column.toLowerCase(),
@@ -66,7 +65,8 @@ export async function extractQuestionsFromExcel(buffer: ArrayBuffer | Buffer): P
   const all: ExtractedQuestion[] = []
   for (const sheet of workbook.worksheets) {
     const questions = await extractFromSheet(sheet, all.length)
-    all.push(...questions)
+    // Skip sheets that yield fewer than 2 questions — likely cover pages or lookup tables
+    if (questions.length >= 2) all.push(...questions)
   }
 
   if (all.length === 0) throw new Error('No questions found in any sheet')
