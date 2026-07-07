@@ -1,5 +1,4 @@
 import ExcelJS from 'exceljs'
-import { detectColumns } from '@/lib/ai/column-mapper'
 
 export interface ExtractedQuestion {
   raw_text:       string
@@ -20,10 +19,10 @@ function cellToString(value: ExcelJS.CellValue): string {
   return String(value)
 }
 
-async function extractFromSheet(
+function extractFromSheet(
   sheet: ExcelJS.Worksheet,
   sequenceOffset: number,
-): Promise<ExtractedQuestion[]> {
+): ExtractedQuestion[] {
   const rows: string[][] = []
   sheet.eachRow({ includeEmpty: false }, (row) => {
     const values = row.values as ExcelJS.CellValue[]
@@ -32,19 +31,17 @@ async function extractFromSheet(
 
   if (rows.length < 2) return []
 
-  const headers    = rows[0]
-  const sampleRows = rows.slice(1, 5)
-
-  const columnMap = await detectColumns(headers, sampleRows)
-
-  let qColIndex = headers.findIndex(
-    (h) => h?.toLowerCase() === columnMap.question_column.toLowerCase(),
-  )
-  if (qColIndex === -1) {
-    const letter      = columnMap.question_column.toUpperCase()
-    const letterIndex = letter.charCodeAt(0) - 65
-    qColIndex         = letterIndex >= 0 && letterIndex < headers.length ? letterIndex : 0
-  }
+  // Find the column with the most cells containing substantial text (15–600 chars).
+  // Uploaded questionnaires always have empty answer slots, so the question column wins.
+  const scores: number[] = []
+  rows.slice(1).forEach(row => {
+    row.forEach((cell, i) => {
+      if (cell.length >= 15 && cell.length <= 600) scores[i] = (scores[i] ?? 0) + 1
+    })
+  })
+  const qColIndex = scores.length > 0
+    ? scores.reduce((best, s, i) => (s ?? 0) > (scores[best] ?? 0) ? i : best, 0)
+    : 0
 
   return rows
     .slice(1)
@@ -66,7 +63,7 @@ export async function extractQuestionsFromExcel(buffer: ArrayBuffer | Buffer): P
 
   const all: ExtractedQuestion[] = []
   for (const sheet of workbook.worksheets) {
-    const questions = await extractFromSheet(sheet, all.length)
+    const questions = extractFromSheet(sheet, all.length)
     // Skip sheets that yield fewer than 2 questions — likely cover pages or lookup tables
     if (questions.length >= 2) all.push(...questions)
   }
